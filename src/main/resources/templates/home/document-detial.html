@@ -1,0 +1,196 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="home/public/head::head(~{::title},~{::style},~{})">
+    <title>资料详情-答题吧</title>
+    <style>
+        .text-overflow {
+            font-size: 15px;
+            line-height: 26px;
+        }
+        .layui-card-body {
+            padding: 20px 20px;
+            padding-bottom: 40px;
+        }
+        .layui-badge {
+            margin-right: 5px;
+        }
+        .layui-card {
+            margin-bottom: 8px;
+        }
+        h4 {
+            font-weight: bolder;
+            line-height: unset;
+        }
+        .layui-rate {
+           padding: 0;
+        }
+    </style>
+</head>
+
+<body>
+
+<!--顶部导航栏导入-->
+<div th:replace="home/public/top-menu::top-menu"></div>
+
+<div class="layui-container" id="container">
+    <div class="layui-row">
+        <div class="layui-col-md12">
+            <fieldset class="layui-elem-field layui-field-title">
+                <legend>文件详情</legend>
+            </fieldset>
+        </div>
+    </div>
+
+    <div class="layui-row" style="padding: 20px; background-color: #F2F2F2;">
+
+        <div class="layui-card layui-anim layui-anim-scale" th:each="item : ${document}">
+            <div class="layui-card-header">
+                <h4 th:text="${item.title}"></h4>
+            </div>
+            <div class="layui-card-body">
+                <p class="text-overflow" th:text="${item.summary}"></p>
+                <div class="layui-col-md4">
+                    <span class="layui-badge layui-bg-orange" th:text="${item.grade.gradeName}"></span>
+                    <span class="layui-badge layui-bg-blue" th:text="${item.subject.subjectName}"></span>
+                    <span class="layui-badge layui-bg-green" th:if="${item.documentType}==1" th:text="'题目资料'"></span>
+                    <span class="layui-badge layui-bg-green" th:if="${item.documentType}==2" th:text="'复习资料'"></span>
+                    <span class="layui-badge layui-bg-green" th:if="${item.documentType}==3" th:text="'杂项资料'"></span>
+                    <span class="layui-badge" th:text="${item.integral}>0?${item.integral}+'积分':'免积分'"></span>
+                    <span class="layui-badge layui-bg-cyan" th:text="${item.downloadCount}+'次下载'"></span>
+                </div>
+                <div class="layui-col-md2" th:text="${#dates.format(item.createTime,'yyyy-MM-dd HH:mm:ss')}"></div>
+                <div class="layui-col-md3">
+                    上传用户：<a th:href="'/home/index/userinfo/'+${item.user.id}" th:text="${item.user.nickName}"></a>
+                </div>
+                <div class="layui-col-md2" id="score"></div>
+                <div class="layui-col-md1">
+                    <button class="layui-btn layui-btn-sm" th:onclick="'javascript:download('+${item.id}+')'">
+                        立即下载<i class="layui-icon">&#xe601;</i>
+                    </button>
+                </div>
+            </div>
+            <hr class="layui-bg-orange">
+
+            <div class="layui-card layui-anim layui-anim-scale" th:each="comments : ${item.comments}">
+                <div class="layui-card-body">
+                    <p class="text-overflow" th:text="${comments.commentContent}"></p>
+                    <div class="layui-col-md4" th:text="${#dates.format(comments.createTime,'yyyy-MM-dd HH:mm:ss')}"></div>
+                    <div class="layui-col-md5">
+                        下载用户：<a th:href="'/home/index/userinfo/'+${comments.user.id}" th:text="${comments.user.nickName}"></a>
+                    </div>
+                    <div class="layui-col-md3" th:id="'user-score-'+${comments.id}"></div>
+                </div>
+            </div>
+
+        </div>
+
+
+
+    </div>
+
+
+</div>
+
+<!-- 底部导航栏 start-->
+<footer th:replace="home/public/footer::footer"></footer>
+<!-- 底部导航栏end -->
+
+<script th:inline="javascript">
+
+    var doc = [[${document[0]}]];
+    var comments = [[${document[0]}]].comments;
+    var layer;
+    layui.use(['rate', 'layer'], function () {
+        var rate = layui.rate;
+        layer = layui.layer;
+        rate.render({
+            elem: '#score'
+            ,value: doc.score==null?0:doc.score
+            ,half: true
+            ,text: false
+            ,readonly: true
+            ,theme: '#FF8000' //自定义主题色
+        });
+        /*用户评分图标渲染*/
+        for (var i=0; i<comments.length; i++){
+            var id = "#user-score-"+comments[i].id;
+            rate.render({
+                elem: id
+                ,value: comments[i].score
+                ,half: true
+                ,text: false
+                ,readonly: true
+                ,theme: '#FE0000' //自定义主题色
+            });
+        }
+    });
+
+
+    /*文档校验下载*/
+    function download(documentId) {
+        console.log("文档ID：" + documentId);
+        var user = [[${session?.user}]];
+        var document = [[${document}]][0];
+        if (user == null) {//未登录
+            layer.confirm('登录后才能下载，去登录吗？', {
+                btn: ['登录', '不去'] //按钮
+            }, function () {
+                window.location.href = "/home/index/login?pagePath=/home/document/detial/" + documentId;
+            }, function () {
+            });
+            return;
+        }
+        if (user.id == document.user.id) {//自己上传的文件
+            window.open(document.filePath);
+            return;
+        }
+        $.get("/home/document/downloadCheck/" + documentId, function (res) {
+            console.log(res);
+            if (res.seccess == false) {
+                return layer.msg(res.errMsg, {icon: 2, time: 1500});
+            }
+            if (res.success && res.data == "DOWNLOADED") {
+                window.open(document.filePath);
+                return window.location.reload();//刷新页面，防止用户数据更新后读取不一致
+            }
+            if (res.success && res.data == "FIRST") {
+                var canDownload = user.integral >= document.integral;
+                var msg = canDownload ?
+                    '您当前的剩余积分：' + user.integral + '分，下载所需积分：' + document.integral + '分，确认下载吗？' :
+                    '您当前的剩余积分：' + user.integral + '分，下载所需积分：' + document.integral + '分，您当前积分不足，无法下载，请前往答题专区答题赚取积分。';
+                if (canDownload) {
+                    layer.confirm(msg, {
+                        btn: ['下载', '取消']
+                    }, function (sure) {
+                        layer.close(sure);
+                        var changeIntegralPath = "/home/document/changeIntegral";
+                        var requestData = {
+                            addId: document.user.id,
+                            lessId: user.id,
+                            integral: document.integral,
+                            documentId: documentId
+                        };
+                        $.post(changeIntegralPath, requestData, function (res) {
+                            console.log("积分改变结果：", res);
+                            if (res.success) {
+                                window.open(document.filePath);
+                                window.location.reload();//刷新页面，防止用户数据更新后读取不一致
+                            }
+                        });
+
+                    }, function () {
+                    })
+                } else {
+                    layer.confirm(msg, {
+                        btn: ['去答题', '再看看']
+                    }, function () {
+                        window.location.href = "/home/index/question";
+                    }, function () {
+                    })
+                }
+            }
+        });
+    }
+</script>
+</body>
+</html>

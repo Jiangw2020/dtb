@@ -1,0 +1,235 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="home/public/head::head(~{::title},~{::style},~{})">
+    <title>主页-答题吧</title>
+    <style>
+        .head-img-box{
+            height: 146px;
+        }
+        .head-img{
+            max-height: 100%;
+            width: 100%;
+        }
+        .text-overflow{
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 4;
+            overflow: hidden;
+            width: 100%;
+            margin-top: 15px;
+            margin-bottom: 15px;
+            height: 92px;
+        }
+        .layui-card-body{
+            height: 332px;
+        }
+
+        .text-summary {
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 1;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+
+<!--顶部导航栏导入-->
+<div th:replace="home/public/top-menu::top-menu"></div>
+
+<div id="indexApp" v-cloak style="background-color: #F2F2F2;">
+    <!--主页轮播图-->
+    <div class="layui-carousel" id="test3" lay-filter="test4">
+        <div carousel-item>
+            <div th:each="item : ${carouselList}"><img th:src="${item.photoUrl}" th:data-url="${item.detailUrl}"
+                                                       onclick="javascript:goPage(this)"/></div>
+        </div>
+    </div>
+
+    <!--认证名师开始-->
+    <div class="layui-container" style="margin-top:15px;">
+        <div class="layui-row">
+            <div class="layui-col-md12 box layui-col-xs12 itembox">
+                <div class="layui-row">
+                    <div class="layui-col-md2 layui-col-xs12"><h4 class="title"
+                                                        style="border-bottom:2px solid red;padding-bottom:5px;">
+                        人气教师</h4>
+                    </div>
+                </div>
+
+                <div class="layui-row layui-col-space15">
+                    <div v-for="item in teacherList" class="layui-col-md3">
+                        <div class="layui-card layui-anim layui-anim-scale">
+                            <div class="layui-card-header">{{item.userName}}</div>
+                            <div class="layui-card-body">
+                                <div class="head-img-box">
+                                    <img class="head-img" :src="item.userPhoto" alt="...">
+                                </div>
+                                <div class="caption">
+                                    <p class="text-overflow">{{item.userSummary!=null?item.userSummary:'这家伙很懒，没留下简介！'}}</p>
+                                    <p class="text-right">
+                                        <a th:if="${session.user}!=null" :href="'/home/index/ask?invitaId='+item.id" class="layui-btn layui-btn-sm" role="button">去问老师</a>
+                                        <a th:if="${session.user}==null" :href="'/home/index/login?pagePath=/home/index/ask?invitaId='+item.id" class="layui-btn layui-btn-sm" role="button">登录提问</a>
+                                        <a :href="'/home/index/userinfo/'+item.id" class="layui-btn layui-btn-normal layui-btn-sm" role="button">查看详情</a>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <!--认证名师结束-->
+
+    <!--答题明星开始-->
+    <div class="layui-container" style="margin-top:15px;">
+        <div class="layui-row">
+            <div class="layui-col-md12 box layui-col-xs12 itembox">
+                <div class="layui-row">
+                    <div class="layui-col-md2 layui-col-xs12"><h4 class="title"
+                                                        style="border-bottom:2px solid red;padding-bottom:5px;">
+                        答题明星</h4>
+                    </div>
+                </div>
+
+                <div class="layui-row layui-col-space15">
+                    <div v-for="item in studentList" class="layui-col-xs6 layui-col-md3">
+                        <div class="layui-card layui-anim layui-anim-scale">
+                            <div class="layui-card-header">{{item.nickName}}</div>
+                            <div class="layui-card-body">
+                                <div class="head-img-box">
+                                    <img class="head-img" :src="item.userPhoto" alt="...">
+                                </div>
+                                <div class="caption">
+                                    <p class="text-overflow">{{item.userSummary!=null?item.userSummary:'这家伙很懒，没留下简介！'}}</p>
+                                    <p class="text-right">
+                                        <a th:if="${session.user}!=null" :href="'/home/index/ask?invitaId='+item.id" class="layui-btn layui-btn-sm" role="button">去问学霸</a>
+                                        <a th:if="${session.user}==null" :href="'/home/index/login?pagePath=/home/index/ask?invitaId='+item.id" class="layui-btn layui-btn-sm" role="button">登录提问</a>
+                                        <a :href="'/home/index/userinfo/'+item.id" class="layui-btn layui-btn-normal layui-btn-sm" role="button">查看详情</a>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <!--答题明星结束-->
+
+
+    <!-- 两栏列表start -->
+    <div class="layui-container" style="margin-top:15px;">
+        <div class="row" style="background-color:#FFFFFF;padding-bottom:15px ">
+            <div class="col-md-6 col-xs-12;" style="margin-top:15px;">
+                <div class="list-group-item active">热门文档</div>
+                <a :href="'/home/document/detial/'+item.id" class="list-group-item" v-for="item in documentList">
+                    <span class="text-summary">
+                    <span class="layui-badge layui-bg-orange">{{item.grade.gradeName}}</span>
+                    <span class="layui-badge layui-bg-green">{{item.subject.subjectName}}</span>
+                    <span>{{item.title}}</span>
+                    </span>
+                </a>
+            </div>
+            <div class="col-md-6 col-xs-12;" style="margin-top:15px;">
+                <div href="#" class="list-group-item active">热门题目</div>
+                <a :href="'/home/index/answer/'+item.id" class="list-group-item" v-for="item in questionList">
+                    <span class="text-summary">
+                    <span class="layui-badge layui-bg-orange">{{item.grade.gradeName}}</span>
+                    <span class="layui-badge layui-bg-green">{{item.subject.subjectName}}</span>
+                    <span>{{item.questionSummary}}</span>
+                    </span>
+                </a>
+            </div>
+        </div>
+    </div>
+    <!-- 两栏列表end -->
+</div>
+
+<!-- 底部导航栏 start-->
+<footer th:replace="home/public/footer::footer"></footer>
+<!-- 底部导航栏end -->
+
+<script th:src="@{/static/common/plugs/vue/vue.js}"></script>
+
+<script type="text/javascript">
+
+    <!--轮播图参数设置-->
+    layui.use(['carousel'], function () {
+        var carousel = layui.carousel;
+        //建造实例
+        carousel.render({
+            elem: '#test3'
+            , width: '100%' //设置容器宽度
+            , height: '500px'
+            , arrow: 'always' //始终显示箭头
+            //,anim: 'updown' //切换动画方式
+        });
+    });
+    var indexApp = new Vue({
+        el: "#indexApp",
+        data:{
+            teacherList: ""//教师列表
+            ,studentList: ""//学生列表
+            , documentList: ""//文档列表
+            , questionList: ""//资料列表
+        },
+        methods:{
+            /**
+             * 根据用户类型查询用户列表
+             * @param userType 用户类型
+             */
+            getUserListToLimit: function (userType) {
+                var utp = 1;
+                if (userType == "teacher")
+                    utp = 2;
+                $.get("/home/user/getUserListToLimit/1/8/"+utp,function (res) {
+                    switch (userType){
+                        case "teacher":
+                            indexApp.$data.teacherList = res.data.userList;
+                            break;
+                        case "student":
+                            indexApp.$data.studentList = res.data.userList;
+                            break;
+                    }
+                });
+            },
+            /**
+             * 获取热门文档
+             */
+            getDoumentList: function () {
+                $.get("/home/document/searchListToLimit", {pageNum: 1, pageSize: 10}, function (res) {
+                    indexApp.$data.documentList = res.data.documentList;
+                });
+            },
+            /**
+             * 获取热门问题
+             */
+            getQuestionList: function () {
+                $.get("/home/question/getQuestionList", {pageNum: 1, pageSize: 10}, function (res) {
+                    indexApp.$data.questionList = res.data.list;
+                });
+            }
+        }
+    });
+
+    function goPage(ele) {
+        var url = ele.getAttribute("data-url");
+        console.log("轮播图详情地址：", url);
+        if (url != null && url.trim() != '') {
+            location.href = url;
+        }
+    }
+
+    /*获取认证名师*/
+    indexApp.getUserListToLimit("teacher");
+    /*获取答题明星列表*/
+    indexApp.getUserListToLimit("student");
+    indexApp.getDoumentList();
+    indexApp.getQuestionList();
+</script>
+</body>
+</html>

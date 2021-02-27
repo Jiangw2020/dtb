@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+    <!--顶部导航栏-->
+    <ul th:fragment="top-menu" id="app" class="layui-nav" lay-filter="" style="text-align: center;margin-bottom: 0;">
+        <li class="layui-nav-item"><a href="/home/index/index">首页</a></li>
+        <li class="layui-nav-item">
+            <a href="/home/index/user/list/2">知名师资</a>
+            <dl class="layui-nav-child">
+                <dd><a href="/home/index/user/list/2">知名教师</a></dd>
+                <dd><a href="/home/index/user/list/1">人气学霸</a></dd>
+                <dd><a th:href="@{${session.user}==null?'/home/index/login?pagePath=/home/teacher/auth':'/home/teacher/auth'}">教师认证</a></dd>
+            </dl>
+        </li>
+        <li class="layui-nav-item">
+            <a href="/home/index/question">有问有答</a>
+            <dl class="layui-nav-child">
+                <dd><a href="/home/index/question">找答案</a></dd>
+                <dd><a href="/home/index/ask">去提问</a></dd>
+                <dd><a href="/home/question/myAsk">我的提问</a></dd>
+            </dl>
+        </li>
+        <li class="layui-nav-item">
+            <a href="/home/document/list">资料专区</a>
+            <dl class="layui-nav-child">
+                <dd><a href="/home/document/list">搜索资料</a></dd>
+                <dd><a th:href="@{${session.user}==null?'/home/index/login?pagePath=/home/document/add':'/home/document/add'}">上传资料</a></dd>
+                <dd><a href="/home/document/myDocumentList">我的记录</a></dd>
+            </dl>
+        </li>
+        <li class="layui-nav-item">
+            <a href="/home/index/gift/list">积分兑换</a>
+            <dl class="layui-nav-child">
+                <dd><a href="/home/index/gift/list">兑换专区</a></dd>
+                <dd><a href="/home/exchange/exchangePage">我的兑换</a></dd>
+            </dl>
+        </li>
+        <li class="layui-nav-item"><a href="/home/feedback/add">意见反馈</a></li>
+        <li class="layui-nav-item"><a href="/home/index/about">联系我们</a></li>
+
+        <li class="layui-nav-item" th:if="${session.user} == null"><a href="/home/index/login">登录</a></li>
+        <li class="layui-nav-item" th:if="${session.user} == null"><a href="/home/index/register">注册</a></li>
+
+        <li class="layui-nav-item" th:if="${session.user} != null">
+            <a th:href="'/home/user/personalCenter/'+${session.user.id}"><img
+                    th:src="@{${session.user.userPhoto}==null?'/static/home/images/user-head/1.jpg':${session.user.userPhoto}}"
+                    class="layui-nav-img" th:text="${session.user.userName}"></a>
+            <dl class="layui-nav-child">
+                <dd><a th:href="'/home/user/personalCenter/'+${session.user.id}">个人中心</a></dd>
+                <dd><a href="/home/exchange/exchangePage">我的兑换</a></dd>
+                <dd><a href="/home/address/myaddress">我的地址</a></dd>
+                <dd><a href="javascript:void(0);" id="JsSignOut">退了</a></dd>
+            </dl>
+        </li>
+        <script src="/static/common/plugs/vue/vue.js"></script>
+        <script th:inline="javascript">
+            //安全退出
+            $('#JsSignOut').click(function(){
+                layer.confirm('确要定退出登录吗？', {
+                    title:'系统提示',
+                    btn: ['确定','取消']
+                }, function(){
+                    $.post("/home/user/logOut",function (res) {
+                        console.log(res);
+                        if (res.success) {
+                            layer.msg(res.errMsg, {icon: 1, time: 1500});
+                            setTimeout(goTo(res.data), 1500);
+                            return;
+                        }
+                        layer.msg(res.errMsg, {icon: 2, time: 1500});
+                    })
+                });
+            });
+
+            /*页面跳转*/
+            function goTo(url) {
+                window.location.href=url;//刷新当前界面
+            }
+        </script>
+    </ul>
+</html>

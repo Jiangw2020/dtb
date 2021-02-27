@@ -1,0 +1,147 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="home/public/head::head(~{::title},~{},~{})">
+    <title>我的收货地址-答题吧</title>
+</head>
+<body>
+
+<div th:replace="home/public/top-menu::top-menu"></div>
+
+<div class="layui-container" v-cloak id="container">
+    <div class="layui-row">
+        <div class="layui-col-md12">
+            <fieldset class="layui-elem-field layui-field-title">
+                <legend>我的收货地址</legend>
+            </fieldset>
+        </div>
+    </div>
+
+    <div class="layui-row">
+        <table class="layui-table">
+            <colgroup>
+                <col>
+                <col>
+                <col>
+            </colgroup>
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>收货人姓名</th>
+                <th>收货人电话</th>
+                <th>收货地址</th>
+                <th>创建时间</th>
+                <th>编辑</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr v-for="item in addressList">
+                <td>{{item.id}}</td>
+                <td>{{item.userName}}</td>
+                <td>{{item.phone}}</td>
+                <td>{{item.province| getAddressByCode(item.city,item.area)}} {{item.detial}}</td>
+                <td>{{item.createTime}}</td>
+                <td><a href="javascript:void(0)" @click="del(item.id)">删除</a></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="layui-row">
+        <div class="layui-col-md12 text-right">
+            <button type="button" id="addBtn" class="layui-btn">新增地址</button>
+        </div>
+    </div>
+</div>
+
+
+<script th:src="@{/static/common/plugs/address/data.js}"></script>
+<script th:src="@{/static/common/plugs/vue/vue.js}"></script>
+<script th:inline="javascript">
+
+    var layer;
+    layui.use(['layer'], function (r) {
+        layer = layui.layer;
+    });
+
+    var that = this;
+    var app = new Vue({
+        el: "#container",
+        data: {
+            addressList: null
+        },
+        //过滤器
+        filters: {
+            /**
+             * 根据地区代码查询地名
+             */
+            getAddressByCode: function (provinceCode, cityCode, areaCode) {
+                var address = "";
+                $.each(that.threeSelectData, function (k1, v1) {
+                    if (v1.val === provinceCode) {
+                        $.each(v1.items, function (k2, v2) {
+                            if (v2.val === cityCode) {
+                                $.each(v2.items, function (k3, v3) {
+                                    if (v3 === areaCode) {
+                                        address = k1 + ' ' + k2 + ' ' + k3;
+                                    }
+                                })
+                            }
+                        })
+                    }
+                });
+                return address;
+            }
+        },
+        methods: {
+            del: function (id) {
+                layer.confirm('确认要删除吗？', function (index) {
+                    //发异步删除数据
+                    $.post("/home/address/updateById", {
+                        id: id,
+                        deleteTime: getNowTimeStr()
+                    }, function (res) {
+                        console.log(res);
+                        if (res.success) {
+                            layer.msg('已删除!', {
+                                icon: 1,
+                                time: 1000
+                            });
+                            setTimeout(refresh, 1000);
+                        } else {
+                            layer.msg(res.errMsg, {
+                                icon: 2,
+                                time: 1000
+                            });
+                        }
+                    });
+                });
+            }
+        }
+    });
+
+    $("#addBtn").on('click', function () {
+        layer.open({
+            type: 2,
+            title: '新增地址',
+            shadeClose: true,
+            shade: 0.8,
+            area: ['60%', '60%'],
+            content: '/home/address/addPage' //iframe的url
+        });
+    });
+
+    /**
+     * 获取自己的地址列表
+     */
+    function getMyAddressList() {
+        $.post("/home/address/queryAddressListByUserId/" + [[${session.user.id}]], function (res) {
+            console.log(res);
+            app.$data.addressList = res.data;
+        })
+    }
+
+    getMyAddressList();
+</script>
+
+
+</body>
+</html>

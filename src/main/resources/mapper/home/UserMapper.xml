@@ -1,0 +1,368 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dtb.home.dao.UserMapper">
+  <resultMap id="BaseResultMap" type="com.dtb.entity.User">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="user_name" jdbcType="VARCHAR" property="userName" />
+    <result column="nick_name" jdbcType="VARCHAR" property="nickName" />
+    <result column="login_state" jdbcType="BIT" property="loginState" />
+    <result column="password" jdbcType="VARCHAR" property="password" />
+    <result column="comment_state" jdbcType="BIT" property="commentState" />
+    <result column="question_state" jdbcType="BIT" property="questionState" />
+    <result column="answer_state" jdbcType="BIT" property="answerState" />
+    <result column="user_type" jdbcType="TINYINT" property="userType" />
+    <result column="sex" jdbcType="TINYINT" property="sex" />
+    <result column="province" jdbcType="VARCHAR" property="province" />
+    <result column="city" jdbcType="VARCHAR" property="city" />
+    <result column="area" jdbcType="VARCHAR" property="area" />
+    <result column="email" jdbcType="VARCHAR" property="email" />
+    <result column="phone" jdbcType="VARCHAR" property="phone" />
+    <result column="user_photo" jdbcType="VARCHAR" property="userPhoto" />
+    <result column="integral" jdbcType="INTEGER" property="integral" />
+    <result column="email_code" jdbcType="CHAR" property="emailCode" />
+    <result column="phone_verify" jdbcType="BIT" property="phoneVerify" />
+    <result column="email_verify" jdbcType="BIT" property="emailVerify" />
+    <result column="login_time" jdbcType="TIMESTAMP" property="loginTime" />
+    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+    <result column="update_time" jdbcType="TIMESTAMP" property="updateTime" />
+    <result column="delete_time" jdbcType="TIMESTAMP" property="deleteTime" />
+  </resultMap>
+  <resultMap extends="BaseResultMap" id="ResultMapWithBLOBs" type="com.dtb.entity.User">
+    <result column="user_summary" jdbcType="LONGVARCHAR" property="userSummary" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, user_name, nick_name, login_state, password, comment_state, question_state, answer_state, 
+    user_type, sex, province, city, area, email, phone, user_photo, integral, email_code, 
+    phone_verify, email_verify, login_time, create_time, update_time, delete_time
+  </sql>
+  <sql id="Blob_Column_List">
+    user_summary
+  </sql>
+
+
+
+  <select id="selectByPhone" resultMap="ResultMapWithBLOBs">
+    select
+    <include refid="Base_Column_List" />
+    ,
+    <include refid="Blob_Column_List" />
+    from as_user
+    where phone = #{phone,jdbcType=VARCHAR}
+    and delete_time is null
+  </select>
+
+  <select id="selectUserInfoById" resultType="java.util.Map">
+    SELECT
+    	nick_name AS nickName,
+    	user_photo AS userPhoto,
+    	user_name AS userName,
+    	login_state AS loginState,
+    	comment_state AS commentState,
+    	question_state AS questionState,
+    	answer_state AS answerState,
+    	sex,
+    	email,
+    	phone,
+    	integral,
+    	login_time AS loginTime,
+    	create_time AS createTime,
+        IF(user_summary IS NULL,'这家伙很懒，没留下简介！',user_summary) AS userSummary,
+    	(
+    		CASE
+    		WHEN user_type = 1 THEN
+    			'普通用户'
+    		WHEN user_type = 2 THEN
+    			(
+    				SELECT
+
+    				IF (
+    					COUNT(*) >= 1,
+    					'认证教师',
+    					'未认证教师'
+    				)
+    				FROM
+    					as_teacher
+    				WHERE
+    					user_id = #{userId}
+    				AND auth_state = 1
+    			)
+    		END
+    	) AS userType,
+    	(
+    		SELECT
+    			COUNT(*)
+    		FROM
+    			as_answers
+    		WHERE
+    			user_id = #{userId}
+    	) AS countAnswer,
+    	(
+    		SELECT
+    			COUNT(*)
+    		FROM
+    			as_questions
+    		WHERE
+    			user_id = #{userId}
+    	) AS countQuestion,
+    	(
+    		SELECT
+    			COUNT(*)
+    		FROM
+    			as_answers
+    		WHERE
+    			user_id = #{userId}
+    		AND adoption_state = TRUE
+    	) AS countAdoption
+    FROM
+    	as_user
+    WHERE
+    	id = #{userId};
+  </select>
+
+  <select id="selectByEmail" resultMap="ResultMapWithBLOBs">
+      select
+      <include refid="Base_Column_List" />
+      ,
+      <include refid="Blob_Column_List" />
+      from as_user
+      where email = #{email,jdbcType=VARCHAR}
+      and delete_time is null
+  </select>
+
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="ResultMapWithBLOBs">
+    select 
+    <include refid="Base_Column_List" />
+    ,
+    <include refid="Blob_Column_List" />
+    from as_user
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from as_user
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+
+  <insert id="insertSelective" useGeneratedKeys="true" keyProperty="id" parameterType="com.dtb.entity.User">
+    insert into as_user
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="userName != null">
+        user_name,
+      </if>
+      <if test="nickName != null">
+        nick_name,
+      </if>
+      <if test="loginState != null">
+        login_state,
+      </if>
+      <if test="password != null">
+        password,
+      </if>
+      <if test="commentState != null">
+        comment_state,
+      </if>
+      <if test="questionState != null">
+        question_state,
+      </if>
+      <if test="answerState != null">
+        answer_state,
+      </if>
+      <if test="userType != null">
+        user_type,
+      </if>
+      <if test="sex != null">
+        sex,
+      </if>
+      <if test="province != null">
+        province,
+      </if>
+      <if test="city != null">
+        city,
+      </if>
+      <if test="area != null">
+        area,
+      </if>
+      <if test="email != null">
+        email,
+      </if>
+      <if test="phone != null">
+        phone,
+      </if>
+      <if test="userPhoto != null">
+        user_photo,
+      </if>
+      <if test="integral != null">
+        integral,
+      </if>
+      <if test="emailCode != null">
+        email_code,
+      </if>
+      <if test="phoneVerify != null">
+        phone_verify,
+      </if>
+      <if test="emailVerify != null">
+        email_verify,
+      </if>
+        login_time,
+        create_time,
+      <if test="updateTime != null">
+        update_time,
+      </if>
+      <if test="deleteTime != null">
+        delete_time,
+      </if>
+      <if test="userSummary != null">
+        user_summary,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="userName != null">
+        #{userName,jdbcType=VARCHAR},
+      </if>
+      <if test="nickName != null">
+        #{nickName,jdbcType=VARCHAR},
+      </if>
+      <if test="loginState != null">
+        #{loginState,jdbcType=BIT},
+      </if>
+      <if test="password != null">
+        #{password,jdbcType=VARCHAR},
+      </if>
+      <if test="commentState != null">
+        #{commentState,jdbcType=BIT},
+      </if>
+      <if test="questionState != null">
+        #{questionState,jdbcType=BIT},
+      </if>
+      <if test="answerState != null">
+        #{answerState,jdbcType=BIT},
+      </if>
+      <if test="userType != null">
+        #{userType,jdbcType=TINYINT},
+      </if>
+      <if test="sex != null">
+        #{sex,jdbcType=TINYINT},
+      </if>
+      <if test="province != null">
+        #{province,jdbcType=VARCHAR},
+      </if>
+      <if test="city != null">
+        #{city,jdbcType=VARCHAR},
+      </if>
+      <if test="area != null">
+        #{area,jdbcType=VARCHAR},
+      </if>
+      <if test="email != null">
+        #{email,jdbcType=VARCHAR},
+      </if>
+      <if test="phone != null">
+        #{phone,jdbcType=VARCHAR},
+      </if>
+      <if test="userPhoto != null">
+        #{userPhoto,jdbcType=VARCHAR},
+      </if>
+      <if test="integral != null">
+        #{integral,jdbcType=INTEGER},
+      </if>
+      <if test="emailCode != null">
+        #{emailCode,jdbcType=CHAR},
+      </if>
+      <if test="phoneVerify != null">
+        #{phoneVerify,jdbcType=BIT},
+      </if>
+      <if test="emailVerify != null">
+        #{emailVerify,jdbcType=BIT},
+      </if>
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP,
+      <if test="updateTime != null">
+        CURRENT_TIMESTAMP,
+      </if>
+      <if test="deleteTime != null">
+        #{deleteTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="userSummary != null">
+        #{userSummary,jdbcType=LONGVARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.dtb.entity.User">
+    update as_user
+    <set>
+        <if test="userName != null &amp;&amp; userName != ''">
+        user_name = #{userName,jdbcType=VARCHAR},
+      </if>
+        <if test="nickName != null &amp;&amp; nickName != ''">
+        nick_name = #{nickName,jdbcType=VARCHAR},
+      </if>
+      <if test="loginState != null">
+        login_state = #{loginState,jdbcType=BIT},
+      </if>
+        <if test="password != null  &amp;&amp; password != ''">
+        password = #{password,jdbcType=VARCHAR},
+      </if>
+      <if test="commentState != null">
+        comment_state = #{commentState,jdbcType=BIT},
+      </if>
+      <if test="questionState != null">
+        question_state = #{questionState,jdbcType=BIT},
+      </if>
+      <if test="answerState != null">
+        answer_state = #{answerState,jdbcType=BIT},
+      </if>
+      <if test="userType != null">
+        user_type = #{userType,jdbcType=TINYINT},
+      </if>
+      <if test="sex != null">
+        sex = #{sex,jdbcType=TINYINT},
+      </if>
+        <if test="province != null  &amp;&amp; province !=''">
+        province = #{province,jdbcType=VARCHAR},
+      </if>
+        <if test="city != null  &amp;&amp; city != ''">
+        city = #{city,jdbcType=VARCHAR},
+      </if>
+        <if test="area != null  &amp;&amp; area != ''">
+        area = #{area,jdbcType=VARCHAR},
+      </if>
+        <if test="email != null  &amp;&amp; email != ''">
+        email = #{email,jdbcType=VARCHAR},
+      </if>
+        <if test="phone != null  &amp;&amp; phone != ''">
+        phone = #{phone,jdbcType=VARCHAR},
+      </if>
+        <if test="userPhoto != null  &amp;&amp; userPhoto != ''">
+        user_photo = #{userPhoto,jdbcType=VARCHAR},
+      </if>
+      <if test="integral != null">
+        integral = #{integral,jdbcType=INTEGER},
+      </if>
+        <if test="emailCode != null  &amp;&amp; emailCode != ''">
+        email_code = #{emailCode,jdbcType=CHAR},
+      </if>
+      <if test="phoneVerify != null">
+        phone_verify = #{phoneVerify,jdbcType=BIT},
+      </if>
+      <if test="emailVerify != null">
+        email_verify = #{emailVerify,jdbcType=BIT},
+      </if>
+      <if test="loginTime != null">
+        login_time = #{loginTime,jdbcType=TIMESTAMP},
+      </if>
+        update_time = CURRENT_TIMESTAMP,
+      <if test="deleteTime != null">
+        delete_time = #{deleteTime,jdbcType=TIMESTAMP},
+      </if>
+        <if test="userSummary != null  &amp;&amp;  userSummary != ''">
+        user_summary = #{userSummary,jdbcType=LONGVARCHAR},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>

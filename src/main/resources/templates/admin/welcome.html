@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="admin/public/head::head(~{},~{},~{})">
+    <meta charset="UTF-8">
+    <title>欢迎使用-答题吧后台管理系统-DTBAdmin 1.0</title>
+</head>
+
+<body>
+<div class="weadmin-body">
+    <blockquote class="layui-elem-quote">欢迎使用WeAdmin 后台模版！</blockquote>
+    <div class="layui-col-lg12 layui-collapse" style="border: none;">
+        <div class="layui-col-lg12 layui-col-md12">
+            <!--统计信息展示-->
+            <fieldset class="layui-elem-field" style="padding: 5px;">
+                <blockquote class="layui-elem-quote font16">信息统计</blockquote>
+                <div class="">
+                    <table class="layui-table" lay-even>
+                        <thead>
+                        <tr>
+                            <th>统计</th>
+                            <th>总提问</th>
+                            <th>总解答</th>
+                            <th>总采纳</th>
+                            <th>总用户</th>
+                            <th>总资料</th>
+                            <th>教师用户</th>
+                            <th>认证教师</th>
+                            <th>学生用户</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td>总数</td>
+                            <td th:text="${count2All.questionAll}"></td>
+                            <td th:text="${count2All.answerAll}"></td>
+                            <td th:text="${count2All.adoptionAll}"></td>
+                            <td th:text="${count2All.userAll}"></td>
+                            <td th:text="${count2All.documentAll}"></td>
+                            <td th:text="${count2All.teacherAll}"></td>
+                            <td th:text="${count2All.authTeacherAll}"></td>
+                            <td th:text="${count2All.studentAll}"></td>
+                        </tr>
+                        <tr>
+                            <td>今日</td>
+                            <td th:text="${count2Today.questionAll}"></td>
+                            <td th:text="${count2Today.answerAll}"></td>
+                            <td th:text="${count2Today.adoptionAll}"></td>
+                            <td th:text="${count2Today.userAll}"></td>
+                            <td th:text="${count2Today.documentAll}"></td>
+                            <td th:text="${count2Today.teacherAll}"></td>
+                            <td th:text="${count2Today.authTeacherAll}"></td>
+                            <td th:text="${count2Today.studentAll}"></td>
+                        </tr>
+                        <tr>
+                            <td>昨日</td>
+                            <td th:text="${count2Yesterday.questionAll}"></td>
+                            <td th:text="${count2Yesterday.answerAll}"></td>
+                            <td th:text="${count2Yesterday.adoptionAll}"></td>
+                            <td th:text="${count2Yesterday.userAll}"></td>
+                            <td th:text="${count2Yesterday.documentAll}"></td>
+                            <td th:text="${count2Yesterday.teacherAll}"></td>
+                            <td th:text="${count2Yesterday.authTeacherAll}"></td>
+                            <td th:text="${count2Yesterday.studentAll}"></td>
+                        </tr>
+                        <tr>
+                            <td>本周</td>
+                            <td th:text="${count2ThisWeek.questionAll}"></td>
+                            <td th:text="${count2ThisWeek.answerAll}"></td>
+                            <td th:text="${count2ThisWeek.adoptionAll}"></td>
+                            <td th:text="${count2ThisWeek.userAll}"></td>
+                            <td th:text="${count2ThisWeek.documentAll}"></td>
+                            <td th:text="${count2ThisWeek.teacherAll}"></td>
+                            <td th:text="${count2ThisWeek.authTeacherAll}"></td>
+                            <td th:text="${count2ThisWeek.studentAll}"></td>
+                        </tr>
+                        <tr>
+                            <td>本月</td>
+                            <td th:text="${count2ThisMonth.questionAll}"></td>
+                            <td th:text="${count2ThisMonth.answerAll}"></td>
+                            <td th:text="${count2ThisMonth.adoptionAll}"></td>
+                            <td th:text="${count2ThisMonth.userAll}"></td>
+                            <td th:text="${count2ThisMonth.documentAll}"></td>
+                            <td th:text="${count2ThisMonth.teacherAll}"></td>
+                            <td th:text="${count2ThisMonth.authTeacherAll}"></td>
+                            <td th:text="${count2ThisMonth.studentAll}"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                    <table class="layui-table">
+                        <thead>
+                        <tr>
+                            <th colspan="2" scope="col">服务器信息</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <th width="30%">服务器计算机名</th>
+                            <td><span id="lbServerName">http://127.0.0.1/</span></td>
+                        </tr>
+                        <tr>
+                            <td>服务器IP地址</td>
+                            <td>127.0.0.1</td>
+                        </tr>
+                        <tr>
+                            <td>服务器域名</td>
+                            <td>datiba.com</td>
+                        </tr>
+                        <tr>
+                            <td>服务器端口</td>
+                            <td>80</td>
+                        </tr>
+                        <tr>
+                            <td>项目名称</td>
+                            <td>dtb</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </fieldset>
+        </div>
+    </div>
+</div>
+</body>
+<script type="text/javascript">
+    layui.extend({
+        admin: '/admin/js/admin',
+    });
+    layui.use(['jquery', 'element', 'util', 'admin', 'carousel'], function () {
+        var element = layui.element,
+            $ = layui.jquery,
+            carousel = layui.carousel,
+            util = layui.util,
+            admin = layui.admin;
+        //建造实例
+        carousel.render({
+            elem: '.weadmin-shortcut'
+            , width: '100%' //设置容器宽度
+            , arrow: 'none' //始终显示箭头
+            , trigger: 'hover'
+            , autoplay: false
+        });
+
+        carousel.render({
+            elem: '.weadmin-notice'
+            , width: '100%' //设置容器宽度
+            , arrow: 'none' //始终显示箭头
+            , trigger: 'hover'
+            , autoplay: true
+        });
+
+        function setTimeAgo(y, M, d, H, m, s, id) {
+            var str = util.timeAgo(new Date(y, M || 0, d || 1, H || 0, m || 0, s || 0));
+            $(id).html(str);
+            console.log(str);
+        };
+    });
+</script>
+
+</html>

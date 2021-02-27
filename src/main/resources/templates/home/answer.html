@@ -1,0 +1,431 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="home/public/head::head(~{::title},~{::style},~{::link})">
+    <title>解答详情-答题吧</title>
+    <link rel="stylesheet" type="text/css" th:href="@{/static/common/plugs/viewer/viewer.css}"/>
+    <style>
+        [v-cloak] {
+            display: none;
+        }
+
+        .row {
+            padding-top: 5px;
+            padding-bottom: 10px;
+        }
+
+        img {
+            width: 30%;
+        }
+
+        .img-thumbnail {
+            height: 150px;
+            width: auto;
+        }
+
+        p {
+            line-height: 30px;
+        }
+
+        .adopt {
+            background-color: #F5F5F5;
+        }
+    </style>
+</head>
+
+<body>
+
+<!--顶部导航栏-->
+<div th:replace="home/public/top-menu::top-menu"></div>
+<div id="answer_container">
+    <nav class="navbar navbar-default ex-navbar">
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <div class="navbar-form navbar-left form-inline" style="text-align: center;width: 100%;">
+                <div class="form-group">
+                    <label>答题吧</label> >
+                    <label>全部分类</label> >
+                    <label th:text="${questionInfo?.grade?.gradeName}"></label> >
+                    <label th:text="${questionInfo?.subject?.subjectName}"></label> >
+                    <label> 问题详情 </label>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12 col-xs-10">
+                <div class="panel panel-default">
+                    <div class="panel-body">
+                        <div class="row" style="margin-top: 15px;">
+                            <a class="col-md-2" th:href="@{'/home/index/userinfo/'+${questionInfo?.user?.id}}">
+                                <img th:src="@{${questionInfo?.user?.userPhoto}}" style="width: 100%;"
+                                     class="img-rounded"/>
+                                <p class="text-center" th:text="${questionInfo?.user?.nickName}"></p>
+                            </a>
+
+                            <div class="col-md-10">
+                                <div class="row">
+                                    <div class="col-md-12" id="questionPhotoBox">
+                                        <p class="text-left" th:text="${questionInfo.questionSummary}"></p>
+                                        <th:block th:if="${questionInfo.questionPhotoList}!=null">
+                                            <img th:src="@{${item}}" th:each="item : ${questionInfo.questionPhotoList}"
+                                                 class="img-thumbnail">
+                                        </th:block>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label class="col-md-3 text-success"
+                                               th:text="'['+${questionInfo?.grade?.gradeName}+${questionInfo?.subject?.subjectName}+']'"></label>
+                                        <label class="col-md-9 text-muted"
+                                               th:text="${#dates.format(questionInfo.createTime, 'yyyy-MM-dd HH:mm:ss')}"></label>
+                                    </div>
+
+                                    <div class="col-md-6 text-right">
+                                        <label class="col-md-8 text-primary"
+                                               th:text="'悬赏积分：'+${questionInfo.integral}+'分'"></label>
+                                        <label class="col-md-4 text-primary"
+                                               th:text="'回答：'+${#arrays.length(questionInfo.answers)}"></label>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <textarea class="form-control" rows="8" v-model="answerSummary"
+                                                  placeholder="请输入你的回答或上传图片" style="resize: none;"></textarea>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-12" id="imgBox"></div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12 text-right" th:if="${session.user}!=null">
+                                        <button th:onclick="'javascript:report('+'\'QUESTION\','+${questionInfo.id}+');'"
+                                                class="layui-btn layui-btn-danger">举报此提问
+                                        </button>
+                                        <button type="button" class="layui-btn" id="uploadimg">
+                                            <i class="layui-icon">&#xe67c;</i>上传图片
+                                        </button>
+                                        <button th:if="${session.user.answerState}" type="button" id="subBtn"
+                                                @click="clearImg()"
+                                                class="layui-btn layui-btn-normal">回答
+                                        </button>
+                                        <button th:if="!${session.user.answerState}" type="button"
+                                                onclick="msg('您当前已被禁止答题，如有疑问请咨询管理员！')"
+                                                class="layui-btn layui-btn-disabled">回答
+                                        </button>
+                                    </div>
+                                    <div class="col-md-12 text-right" th:if="${session.user}==null">
+                                        <button th:onclick="'javascript:report('+'\'QUESTION\','+${questionInfo.id}+');'"
+                                                class="layui-btn layui-btn-danger">举报此提问
+                                        </button>
+                                        <a th:href="@{'/home/index/login?pagePath=/home/index/answer/'+${questionInfo.id}}"
+                                           class="layui-btn layui-btn-normal">登录答题</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="well" style="font-size: larger;">解答列表</div>
+
+                        <div id="myTabContent" class="tab-content" style="padding: 20px;">
+                            <div class="tab-pane fade in active" id="home">
+                                <div th:class="${item.adoptionState}?'row adopt':'row'"
+                                     th:each="item : ${questionInfo.answers}"
+                                     style="border-bottom: #D0C8C8 1px solid;padding: 15px;">
+                                    <a class="col-md-2" th:href="@{'/home/index/userinfo/'+${item?.user?.id}}">
+                                        <img th:src="@{${item?.user?.userPhoto}}" style="width: 100%;"
+                                             class="img-rounded"/>
+                                        <p class="text-center" th:text="${item?.user?.nickName}"></p>
+                                    </a>
+
+                                    <div class="col-md-10">
+                                        <div class="row">
+                                            <div class="col-md-12" th:id="'answer'+${item.id}">
+                                                <span th:if="${item.adoptionState}"
+                                                      class="label label-success">已采纳</span>
+                                                <p class="text-left" th:text="${item.answerSummary}"></p>
+                                                <img th:each="photo:${item.answerPhotoList}" th:src="${photo}"
+                                                     th:data-original="${photo}" class="img-thumbnail">
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="col-md-9 text-muted"
+                                                     th:text="${#dates.format(item.createTime, 'yyyy-MM-dd HH:mm:ss')}"></div>
+                                            </div>
+
+                                            <div class="col-md-6 text-right">
+                                                <span th:if="${questionInfo.solveState}==0">
+                                                    <span th:if="${questionInfo.questionState}">
+                                                        <button th:if="${session?.user?.id} == ${questionInfo.userId}"
+                                                                th:onclick="'javascript:adopt('+${questionInfo.id}+','+${item.id}+');'"
+                                                                class="layui-btn layui-btn-sm">采纳</button>
+                                                    </span>
+                                                </span>
+                                                <button th:onclick="'javascript:report('+'\'ANSWER\','+${item.id}+');'"
+                                                        class="layui-btn layui-btn-danger layui-btn-sm">举报此解答
+                                                </button>
+                                                <button th:onclick="'javascript:attitude('+'\'LIKE\','+${item.id}+');'"
+                                                        th:id="'LIKE-'+${item.id}"
+                                                        class="layui-btn layui-btn-warm layui-btn-sm layui-icon layui-icon-praise"
+                                                        th:text="${item.approvalNum}"></button>
+                                                <button th:onclick="'javascript:attitude('+'\'OPPOSE\','+${item.id}+');'"
+                                                        th:id="'OPPOSE-'+${item.id}"
+                                                        class="layui-btn layui-btn-normal layui-btn-sm layui-icon layui-icon-tread"
+                                                        th:text="${item.opposeNum}"></button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 底部导航栏 start-->
+<footer th:replace="home/public/footer::footer"></footer>
+<!-- 底部导航栏end -->
+
+<script th:src="@{/static/common/plugs/vue/vue.js}"></script>
+<script th:src="@{/static/common/plugs/viewer/viewer.js}"></script>
+
+<!--vue相关js-->
+<script th:inline="javascript">
+    /*初始化图片查看插件viewer*/
+    function initViewer(id) {
+        console.log("初始化了viewer");
+        $("#" + id).viewer({
+            url: "data-original"
+        });
+    }
+
+    /**
+     * 举报
+     */
+    function report(tp, id) {
+        if ([[${session.user}]] == null) {
+            layer.confirm("请登录后举报！", {icon: 3, title: '提示'}, function (index) {
+                location.href = "/home/index/login?pagePath=/home/index/answer/" + [[${questionInfo}]].id;
+                layer.close(index);
+            });
+            return;
+        }
+
+        layer.prompt({title: '请输入举报详细描述', formType: 2}, function (text, index) {
+            if (text == null || text == '') {
+                layer.msg('请输入举报详细描述', {icon: 2, time: 1500});
+                return null;
+            }
+            var userId = [[${session.user}]].id;
+            var requestData = {
+                userId: userId,
+                reportType: tp,
+                summary: text,
+                beId: id
+            };
+            $.post("/home/report/addReport", requestData, function (res) {
+                if (res.success) {
+                    layer.msg("举报成功，感谢您的支持！", {time: 1500, icon: 1});
+                }
+            });
+            layer.close(index);
+        });
+    }
+
+    /**
+     * 点赞OR踩
+     */
+    function attitude(tp, id) {
+        if ([[${session.user}]] == null) {
+            layer.confirm("请登录后操作！", {icon: 3, title: '提示'}, function (index) {
+                location.href = "/home/index/login?pagePath=/home/index/answer/" + [[${questionInfo}]].id;
+                layer.close(index);
+            });
+            return;
+        }
+        $.post("/home/question/attitude", {tp: tp, answerId: id}, function (res) {
+            if (res.success) {
+                if (tp == 'LIKE') {
+                    $("#LIKE-" + id).text(Number($("#LIKE-" + id).text()) + 1);
+                    layer.msg("已赞", {time: 1000});
+                } else {
+                    $("#OPPOSE-" + id).text(Number($("#OPPOSE-" + id).text()) + 1);
+                    layer.msg("已踩", {time: 1000});
+                }
+
+            }
+        })
+    }
+
+    /*初始化答案列表的viewer*/
+    function initAnswerViewer() {
+        var answerList = [[${questionInfo.answers}]];
+        for (var i = 0; i < answerList.length; i++) {
+            initViewer("answer" + answerList[i].id);
+        }
+    }
+
+    /**
+     * 通用提示消息
+     * @param content
+     */
+    function msg(content) {
+        layer.msg(content);
+    }
+
+    //图片上传接口地址
+    var uploadUrl = "/home/question/uploadAnswerImages";
+    var layer;
+    /*layui插件模块加载开始*/
+    layui.use(['laypage', 'layer', 'form', 'upload'], function () {
+        var laypage = layui.laypage
+            , form = layui.form
+            , upload = layui.upload;
+        layer = layui.layer;
+        var load;
+        //图片上传
+        var uploadInst = upload.render({
+            elem: '#uploadimg'
+            , url: uploadUrl
+            , multiple: true//多图上传，不支持IE8/9
+            , number: 10//允许同时上传最多图片数量
+            , field: 'files'//后台接收字段名
+            , auto: false//不自动上传
+            , bindAction: "#subBtn"//绑定上传按钮
+            , acceptMime: 'image/*'//（只显示图片文件）
+            , choose: function (obj) { //选择图片后执行
+                //预读本地文件，如果是多文件，则会遍历。(不支持ie8/9)
+                obj.preview(function (index, file, result) {
+                    var img = "<img src='" + result + "'alt='' class='img-thumbnail'>";
+                    $("#imgBox").append(img);
+                });
+                console.log("选择图片啦啦啦啦");
+                answerApp.$data.hasPhotos = true;
+            }
+            , before: function (obj) {
+                var load = layer.msg('图片上传中...', {
+                    icon: 16,
+                    shade: 0.01,
+                    time: false
+                });
+            }
+            , done: function (res, index, upload) { //上传后的回调
+                var img = "<img src='" + res.data + "'alt='' class='img-thumbnail'>";
+                $("#imgBox").append(img);
+                answerApp.$data.answerPhotos = answerApp.$data.answerPhotos + "," + res.data;
+                console.log("上传之后触发的：", res);
+            }
+            , error: function (index, upload) {
+                layer.closeAll(load); //关闭loading
+            }
+            , allDone: function (obj) { //当文件全部被提交后，才触发
+                console.log("全部上传后触发的：", obj);
+                console.log(obj.total); //得到总文件数
+                console.log("请求成功的文件数", obj.successful); //请求成功的文件数
+                console.log("请求失败的文件数", obj.aborted); //请求失败的文件数
+                answerApp.subForm();
+                layer.closeAll(load); //关闭loading
+            }
+        })
+    });
+    /*layui插件模块加载结束*/
+
+    /*实例化vue*/
+    var answerApp = new Vue({
+        el: "#answer_container",
+        data: {
+            answerSummary: "",//答案内容
+            answerPhotos: "",//答案图片
+            hasPhotos: false//默认没有图片上传
+        },
+        methods: {
+            /**
+             * 清除本地回显图片
+             */
+            clearImg: function () {
+                $("#imgBox").empty();
+                /*没有图片就直接提交表单*/
+                if (!answerApp.$data.hasPhotos) {
+                    console.log("是否有图片上传：", answerApp.$data.hasPhotos);
+                    this.subForm();
+                }
+            },
+            /**
+             * 调教表单前的验证
+             */
+            checkeForm: function (subData) {
+                console.log(subData);
+                if (subData.userId == null || subData.userId == "") {
+                    layer.msg("请登录后解答！", {icon: 2, time: 1500});
+                    return false;
+                }
+                if (subData.answerSummary == null || subData.answerSummary == "") {
+                    layer.msg("请输入答案！", {icon: 2, time: 1500});
+                    return false;
+                }
+                return true;
+            },
+            /**
+             * 提交表单
+             */
+            subForm: function () {
+                //清除选择图片的样式
+                var subData = {
+                    userId: [[${session?.user?.id}]],//答题人id
+                    questionId: [[${questionInfo?.id}]],//问题id
+                    answerSummary: answerApp.$data.answerSummary,//答案内容
+                    answerPhotos: answerApp.$data.answerPhotos//问题附件图片
+                };
+                //数据校验
+                if (!this.checkeForm(subData)) {
+                    return;
+                }
+                console.log("提交数据：", subData);
+                $.post("/home/question/addAnswer", subData, function (res) {
+                    if (res.success) {
+                        layer.msg("提交成功，感谢您的解答！", {icon: 1, time: 1500});
+                        setTimeout(refresh, 1510);
+                    } else {
+                        layer.msg(res.errMsg, {icon: 2, time: 1500});
+                    }
+                })
+            }
+        }
+    });
+
+    /**
+     * 采纳问题
+     */
+    function adopt(questionId, answerId) {
+        console.log(questionId, answerId);
+        layer.confirm("确定要采纳当前答案吗？", {
+            btn: ['采纳', '取消']
+        }, function () {
+            var requestUrl = "/home/question/adoptAnswer/" + questionId + "/" + answerId;
+            $.post(requestUrl, function (res) {
+                if (res.success) {
+                    layer.msg("采纳成功！", {icon: 1, time: 1500});
+                    setTimeout(refresh, 1500);
+                }
+            })
+        }, function () {
+        })
+    }
+
+
+    /*初始化问题图片的viewer*/
+    initViewer("questionPhotoBox");
+    /*初始化答案列表的viewer*/
+    initAnswerViewer();
+
+
+</script>
+</body>
+</html>
